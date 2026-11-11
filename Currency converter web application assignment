@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global FX - Modern Currency Converter</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .dark .glass {
+            background: rgba(17, 24, 39, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        /* Custom Scrollbar for Dropdowns */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-300 flex flex-col justify-between">
+
+    <!-- Header Navigation -->
+    <header class="sticky top-0 z-40 border-b border-slate-200 dark:border-slate-800 glass">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-400 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
+                    <i class="fa-solid font-bold text-lg fa-arrow-right-arrow-left"></i>
+                </div>
+                <div>
+                    <span class="font-bold text-xl tracking-tight bg-gradient-to-r from-brand-600 to-indigo-500 bg-clip-text text-transparent">GlobalFX</span>
+                    <span class="text-xs text-slate-500 dark:text-slate-400 block -mt-1 font-medium">Real-Time Currency Exchange</span>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <!-- Theme Toggle Button -->
+                <button id="themeToggle" class="p-2.5 rounded-xl bg-slate-200/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 hover:bg-slate-300/60 dark:hover:bg-slate-700/60 transition-all focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    <i id="themeIcon" class="fa-solid fa-moon text-lg"></i>
+                </button>
+                <button id="refreshBtn" title="Refresh Rates" class="p-2.5 rounded-xl bg-slate-200/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 hover:bg-slate-300/60 dark:hover:bg-slate-700/60 transition-all focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    <i class="fa-solid fa-rotate-right text-lg" id="refreshIcon"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-grow space-y-8">
+
+        <!-- Top Converter Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            
+            <!-- Converter Card (8 Cols on LG) -->
+            <div class="lg:col-span-7 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl shadow-slate-200/50 dark:shadow-none transition-all">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-lg font-semibold flex items-center gap-2">
+                        <i class="fa-solid fa-calculator text-brand-500"></i> Currency Converter
+                    </h2>
+                    <span id="lastUpdated" class="text-xs px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-medium">
+                        Fetching rates...
+                    </span>
+                </div>
+
+                <!-- Input Form -->
+                <div class="space-y-6">
+                    <!-- Amount Input -->
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Amount</label>
+                        <div class="relative rounded-2xl shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 font-semibold text-lg" id="fromSymbol">
+                                $
+                            </div>
+                            <input type="number" id="amountInput" value="100" min="0" step="any"
+                                class="w-full pl-10 pr-4 py-4 text-2xl font-bold bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 focus:bg-white dark:focus:bg-slate-800 text-slate-900 dark:text-white transition-all outline-none"
+                                placeholder="0.00">
+                        </div>
+                    </div>
+
+                    <!-- Currency Selectors with Swap Button -->
+                    <div class="grid grid-cols-1 sm:grid-cols-11 gap-4 items-center">
+                        
+                        <!-- From Currency Dropdown -->
+                        <div class="sm:col-span-5 relative">
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">From</label>
+                            <button id="fromBtn" type="button" class="w-full flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl hover:border-slate-300 dark:hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all">
+                                <div class="flex items-center space-x-3">
+                                    <img id="fromFlag" class="w-7 h-7 rounded-full object-cover shadow-sm" src="" alt="Flag">
+                                    <div class="text-left">
+                                        <span id="fromCode" class="font-bold text-base block text-slate-900 dark:text-white">USD</span>
+                                        <span id="fromName" class="text-xs text-slate-500 dark:text-slate-400 block truncate max-w-[130px]">United States Dollar</span>
+                                    </div>
+                                </div>
+                                <i class="fa-solid fa-chevron-down text-slate-400 text-xs ml-2"></i>
+                            </button>
+
+                            <!-- Dropdown Modal / List -->
+                            <div id="fromDropdown" class="hidden absolute left-0 right-0 top-full mt-2 z-50 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl overflow-hidden p-2">
+                                <div class="p-2 border-b border-slate-100 dark:border-slate-700">
+                                    <input type="text" id="fromSearch" placeholder="Search currency..." class="w-full px-3 py-2 text-sm bg-slate-100 dark:bg-slate-900 border-none rounded-xl focus:outline-none text-slate-900 dark:text-white">
+                                </div>
+                                <div id="fromList" class="max-h-60 overflow-y-auto mt-1 space-y-1">
+                                    <!-- Dynamic items -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Swap Button -->
+                        <div class="sm:col-span-1 flex justify-center pt-2 sm:pt-6">
+                            <button id="swapBtn" type="button" title="Swap Currencies" class="w-12 h-12 rounded-2xl bg-brand-50 dark:bg-slate-800 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-slate-700 flex items-center justify-center hover:bg-brand-600 hover:text-white dark:hover:bg-brand-600 dark:hover:text-white transition-all transform hover:rotate-180 duration-300 shadow-md">
+                                <i class="fa-solid fa-arrow-right-arrow-left sm:rotate-0 rotate-90"></i>
+                            </button>
+                        </div>
+
+                        <!-- To Currency Dropdown -->
+                        <div class="sm:col-span-5 relative">
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">To</label>
+                            <button id="toBtn" type="button" class="w-full flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl hover:border-slate-300 dark:hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all">
+                                <div class="flex items-center space-x-3">
+                                    <img id="toFlag" class="w-7 h-7 rounded-full object-cover shadow-sm" src="" alt="Flag">
+                                    <div class="text-left">
+                                        <span id="toCode" class="font-bold text-base block text-slate-900 dark:text-white">EUR</span>
+                                        <span id="toName" class="text-xs text-slate-500 dark:text-slate-400 block truncate max-w-[130px]">Euro</span>
+                                    </div>
+                                </div>
+                                <i class="fa-solid fa-chevron-down text-slate-400 text-xs ml-2"></i>
+                            </button>
+
+                            <!-- Dropdown Modal / List -->
+                            <div id="toDropdown" class="hidden absolute left-0 right-0 top-full mt-2 z-50 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl overflow-hidden p-2">
+                                <div class="p-2 border-b border-slate-100 dark:border-slate-700">
+                                    <input type="text" id="toSearch" placeholder="Search currency..." class="w-full px-3 py-2 text-sm bg-slate-100 dark:bg-slate-900 border-none rounded-xl focus:outline-none text-slate-900 dark:text-white">
+                                </div>
+                                <div id="toList" class="max-h-60 overflow-y-auto mt-1 space-y-1">
+                                    <!-- Dynamic items -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Result Card Display -->
+                    <div class="mt-6 p-6 rounded-2xl bg-gradient-to-br from-brand-50 to-indigo-50/50 dark:from-slate-800/80 dark:to-slate-800/30 border border-brand-100 dark:border-slate-700/60">
+                        <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Converted Amount</div>
+                        <div class="flex items-baseline flex-wrap gap-2">
+                            <span id="resultAmount" class="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">0.00</span>
+                            <span id="resultCurrency" class="text-xl font-bold text-brand-600 dark:text-brand-400">EUR</span>
+                        </div>
+                        <div class="mt-3 text-sm text-slate-600 dark:text-slate-400 flex items-center gap-1.5 font-medium">
+                            <span>Exchange Rate:</span>
+                            <span id="exchangeRateText" class="font-bold text-slate-800 dark:text-slate-200">1 USD = 0.92 EUR</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Historical Chart & Trend Section (5 Cols on LG) -->
+            <div class="lg:col-span-5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl shadow-slate-200/50 dark:shadow-none h-full flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-lg font-semibold flex items-center gap-2">
+                                <i class="fa-solid fa-chart-line text-brand-500"></i> Rate Trends
+                            </h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Historical performance preview</p>
+                        </div>
+                        <!-- Range Selectors -->
+                        <div class="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl text-xs font-medium">
+                            <button data-range="7d" class="time-range-btn px-2.5 py-1 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">7D</button>
+                            <button data-range="30d" class="time-range-btn active px-2.5 py-1 rounded-lg bg-white dark:bg-slate-700 text-brand-600 dark:text-brand-400 shadow-sm transition">30D</button>
+                            <button data-range="1y" class="time-range-btn px-2.5 py-1 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">1Y</button>
+                        </div>
+                    </div>
+
+                    <!-- Mini Stat Summary -->
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        <div class="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                            <span class="text-xs text-slate-400 block">Period High</span>
+                            <span id="trendHigh" class="text-sm font-bold text-emerald-600 dark:text-emerald-400">--</span>
+                        </div>
+                        <div class="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                            <span class="text-xs text-slate-400 block">Period Low</span>
+                            <span id="trendLow" class="text-sm font-bold text-rose-600 dark:text-rose-400">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Canvas Container -->
+                    <div class="relative w-full h-56 sm:h-64">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Info Notice -->
+                <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-400">
+                    <span class="flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle-info text-brand-500"></i> Mid-market rates updated live
+                    </span>
+                    <span class="font-medium text-emerald-500 flex items-center gap-1">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Live API
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Popular / Favorite Quick Grid Section -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl shadow-slate-200/50 dark:shadow-none">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+                <div>
+                    <h3 class="text-lg font-semibold flex items-center gap-2">
+                        <i class="fa-solid fa-globe text-brand-500"></i> Popular Currency Conversions
+                    </h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Quick estimate of your entered amount across top world currencies</p>
+                </div>
+                <div class="text-xs text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-xl self-start sm:self-auto font-medium">
+                    Base: <span id="quickGridBase" class="font-bold text-slate-700 dark:text-slate-200">USD</span>
+                </div>
+            </div>
+
+            <!-- Grid Container -->
+            <div id="popularGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <!-- Dynamically Inserted Cards -->
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-200 dark:border-slate-800 py-6 bg-white dark:bg-slate-900">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500 dark:text-slate-400 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div>
+                &copy; <span id="year"></span> GlobalFX Application. All exchange rates are provided for informational purposes.
+            </div>
+            <div class="flex items-center space-x-4">
+                <span class="hover:text-brand-500 transition cursor-pointer">Privacy Policy</span>
+                <span>&bull;</span>
+                <span class="hover:text-brand-500 transition cursor-pointer">Terms of Service</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Application Script -->
+    <script>
+        // Supported Currency Dataset with Country Code mappings for Flags (Flagcdn)
+        const CURRENCIES = [
+            { code: "USD", name: "United States Dollar", flag: "us", symbol: "$" },
+            { code: "EUR", name: "Euro", flag: "eu", symbol: "€" },
+            { code: "GBP", name: "British Pound", flag: "gb", symbol: "£" },
+            { code: "NGN", name: "Nigerian Naira", flag: "ng", symbol: "₦" },
+            { code: "JPY", name: "Japanese Yen", flag: "jp", symbol: "¥" },
+            { code: "CAD", name: "Canadian Dollar", flag: "ca", symbol: "CA$" },
+            { code: "AUD", name: "Australian Dollar", flag: "au", symbol: "A$" },
+            { code: "CHF", name: "Swiss Franc", flag: "ch", symbol: "CHF" },
+            { code: "INR", name: "Indian Rupee", flag: "in", symbol: "₹" },
+            { code: "CNY", name: "Chinese Yuan", flag: "cn", symbol: "¥" },
+            { code: "BRL", name: "Brazilian Real", flag: "br", symbol: "R$" },
+            { code: "ZAR", name: "South African Rand", flag: "za", symbol: "R" },
+            { code: "AED", name: "UAE Dirham", flag: "ae", symbol: "AED" },
+            { code: "SAR", name: "Saudi Riyal", flag: "sa", symbol: "SR" },
+            { code: "MXN", name: "Mexican Peso", flag: "mx", symbol: "MEX$" },
+            { code: "SGD", name: "Singapore Dollar", flag: "sg", symbol: "S$" },
+            { code: "HKD", name: "Hong Kong Dollar", flag: "hk", symbol: "HK$" },
+            { code: "NZD", name: "New Zealand Dollar", flag: "nz", symbol: "NZ$" },
+            { code: "KRW", name: "South Korean Won", flag: "kr", symbol: "₩" },
+            { code: "SEK", name: "Swedish Krona", flag: "se", symbol: "kr" },
+            { code: "NOK", name:
